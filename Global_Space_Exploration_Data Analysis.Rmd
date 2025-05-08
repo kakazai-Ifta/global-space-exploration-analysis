@@ -1,0 +1,216 @@
+---
+title: "Global_Space_Exploration_Analysis"
+author: "Ifta kakazai"
+date: "2025-05-06"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 📘 Project Summary: Global Space Exploration Analysis in R
+
+This project presents a comprehensive exploratory data analysis of a dataset on global space exploration activities using R programming. The dataset includes key information such as; 
+  1:  Launching country, 
+  2:  Mission year, 
+  3:  Mission type, 
+  4:  Launch site, 
+  5:  Satellite type, 
+  6:  Budget, 
+  7:  Success rate, 
+  8:  Technology used, 
+  9:  Environmental impact, 
+  10: Collaborating countries &,
+  11: Mission duration. 
+
+The primary goal was to derive meaningful insights from this data while practicing and demonstrating proficiency in data wrangling and data visualization using the tidyverse, particularly dplyr and ggplot2.
+
+
+## Packages Including
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+## Importing the CSV file
+
+```{r}
+Dataset <- read_csv("C:/Users/ifta/OneDrive/Desktop/R Directory/Data Analysis Project/Global_Space_Exploration_Dataset.csv")
+
+```
+
+## Detailed Summary of the Dataset
+
+```{r}
+summary(Dataset)
+```
+
+
+# Data Analysis
+
+
+## Country which has launched the most space missions overall.
+
+```{r}
+top_mission_countries <- Dataset %>%
+  count(Country, name = "Total_Missions") %>%
+  arrange(desc(Total_Missions)) %>%
+  slice_max(Total_Missions, n=3)
+  
+print(top_mission_countries)   
+```
+
+## Global success rate of missions changed over the years.
+```{r}
+Global_Success_Rate <- Dataset %>%
+                          filter(Year %in% c(2021,2022,2023,2024,2025)) %>%
+                          group_by(Year) %>%                          
+                          summarize(avg_success_rate = mean(Success_Rate))
+ggplot(Global_Success_Rate, aes(x=Year, y= avg_success_rate)) +
+  geom_line(color = "grey") +
+  geom_point(color = "black") +
+  labs(title = "Global Average Success Rate of Missions Over the Years", x = "Years", y = "Average Success Rate (%)") +
+  theme_minimal()
+  
+```
+
+## Top 5 countries that have spent the most on space missions.
+```{r}
+Top_Countries_spending <- Dataset %>%
+group_by(Country) %>%
+summarize(Total_Budget_in_Billion = sum(`Budget_(in Billion $)`)) %>%
+slice_max(Total_Budget_in_Billion, n=5)
+
+print(Top_Countries_spending)
+  
+```
+
+## Satellite types that were most commonly used across all missions.
+
+```{r}
+Common_Satellites_Type <- Dataset %>%
+  group_by(Satellite_Type) %>%
+  count(Satellite_Type, name = 'Number_of_Missions', sort = TRUE)
+
+print(Common_Satellites_Type)
+
+```
+
+## The distribution of mission durations.
+
+```{r}
+
+ggplot(na.omit(Dataset), aes(x = `Duration_(in Days)`)) +
+  geom_histogram(bins = 30, fill = "#748cab", color = "white") +
+  labs(title = "Distribution of Mission Durations",
+       x = "Duration (in Days)",
+       y = "Number of Missions") +
+  theme_minimal()
+  
+```
+
+
+
+
+## Comparison of the budgets and missions by country.
+
+```{r}
+Comparison_budget_country <- Dataset %>%
+  select(Country, `Budget_(in Billion $)`) %>%
+  filter(Country %in% c("China","UK", "France", "Israel"))
+
+
+ggplot(Comparison_budget_country, aes(x= Country, y= `Budget_(in Billion $)`)) +
+  geom_boxplot(color = c("China" = "#748cab",
+                         "UK" = "#3e5c76",
+                         "France" = "#fca311",
+                         "Israel" = "#e5e5e5")) +
+  labs(title = "Budgets of mission by Country", 
+         x= "Country",
+         y= "Budgeted Amount in Billion") +
+  theme_minimal()
+```
+
+
+
+## Relationship between budget and success rate.
+
+```{r}
+ggplot(Dataset, aes(x=`Budget_(in Billion $)`
+                    , y= Success_Rate)) +
+   geom_jitter(color = "steelblue", width = 0.1, height = 1, alpha = 0.6) +
+  scale_x_log10() +
+  labs(title = "Budget vs. Mission Success Rate",
+       x = "Budget in Billion $",
+       y = "Success Rate (%)") +
+  theme_minimal()
+```
+
+
+
+
+
+
+## The number of missions for each Mission Type.
+
+```{r}
+Number_of_missions_and_type <- Dataset %>%
+  count(`Mission Type` , name = "Number_of_Missions") %>%
+  group_by(`Mission Type`)
+
+ggplot(Number_of_missions_and_type, aes(x= `Mission Type`, y= Number_of_Missions)) +
+  geom_col(alpha = 0.01, color = c("Manned" = "#14213d",
+                                             "Unmanned" = "#3a7ca5")) + 
+  labs(title = "Distribution of Missions by Type: Manned vs Unmanned")+
+  theme_minimal()
+```
+
+
+
+## Number of Missions by Sattellite Type.
+
+```{r}
+Missions_and_Satellite_type <- Dataset %>%
+  count(Satellite_Type , name = "Number_of_Missions") %>%
+  group_by(Satellite_Type)
+
+
+
+ggplot(Missions_and_Satellite_type, aes(x= Satellite_Type, y= Number_of_Missions)) +
+  geom_col(fill = c("Communication" = "#0d1321",
+                               "Navigation" = "#1d2d44",
+                               "Research" = "#3e5c76",
+                               "Spy" = "#748cab",
+                               "Weather" = "#f0ebd8")) +
+  labs(title = "Number of Mission Vs. Satellite Type", x= "Satellite Type", y = "Number of Missions") +
+  theme_minimal()
+```
+
+
+
+## Top Chinese Space Missions by Budget in 2025
+
+```{r}
+Top_Budgeted_Mission <- Dataset %>%
+    filter(Country == "China", 
+           Year == 2025,
+           `Budget_(in Billion $)`>=20.0) %>%
+    select(Mission_Name,`Budget_(in Billion $)`,Success_Rate)%>%
+    arrange(desc(`Budget_(in Billion $)`))
+    
+
+print(Top_Budgeted_Mission)
+```
+
+
+
+
+
+
+
+
